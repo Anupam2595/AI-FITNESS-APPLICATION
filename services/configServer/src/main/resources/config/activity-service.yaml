@@ -1,0 +1,32 @@
+spring:
+  data:
+    mongodb:
+      uri: ${MONGO_URL}
+      database: aiactivityfitness
+  kafka:
+    bootstrap-server: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+
+server:
+  port: 5567
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:5565/eureka/
+  instance:
+    prefer-ip-address: false
+    hostname: localhost
+
+
+kafka:
+  topic:
+    name: activity-events
+
+logging:
+  level:
+    io.netty.resolver.dns: DEBUG
+    reactor.netty.resolver: DEBUG

@@ -1,0 +1,35 @@
+# === GLOBAL ===
+.DS_Store
+Thumbs.db
+*.log
+
+# === FRONTEND ===
+fitness-frontend/node_modules/
+fitness-frontend/.env
+fitness-frontend/.env.local
+fitness-frontend/.env.*.local
+fitness-frontend/dist/
+fitness-frontend/build/
+
+# === BACKEND (Java / Spring Boot) ===
+services/**/target/
+services/**/build/
+services/**/.classpath
+services/**/.project
+services/**/.settings/
+services/**/.idea/
+services/**/*.iml
+
+# === Docker ===
+**/.dockerignore
+.env
+.env.*
+docker-compose.override.yml
+
+# === Security related ===
+*.jks
+*.keystore
+*.p12
+*.pem
+secrets/
+keycloak-export/

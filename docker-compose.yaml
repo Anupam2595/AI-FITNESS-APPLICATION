@@ -1,0 +1,165 @@
+version: "3.9"
+
+services:
+
+  # ----------------------
+  # Eureka Server
+  # ----------------------
+  eureka:
+    build: ./services/eureka
+    container_name: eureka
+    ports:
+      - "5565:8080"
+    environment:
+      - EUREKA_INSTANCE_HOSTNAME=eureka
+      - EUREKA_CLIENT_REGISTER_WITH_EUREKA=false
+      - EUREKA_CLIENT_FETCH_REGISTRY=false
+    networks:
+      - fitness-net
+
+  # ----------------------
+  # Config Server
+  # ----------------------
+  configserver:
+    build: ./services/configServer
+    container_name: configserver
+    ports:
+      - "5564:8080"
+    depends_on:
+      - eureka
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka:8080/eureka/
+    networks:
+      - fitness-net
+
+  # ----------------------
+  # API Gateway
+  # ----------------------
+  gateway:
+    build: ./services/gateway
+    container_name: gateway
+    ports:
+      - "5569:8080"
+    depends_on:
+      - eureka
+      - userservice
+      - activityservice
+      - aiservice
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka:8080/eureka/
+    networks:
+      - fitness-net
+
+  # ----------------------
+  # User Service
+  # ----------------------
+  userservice:
+    build: ./services/userservice
+    container_name: userservice
+    ports:
+      - "5566:8080"
+    depends_on:
+      - eureka
+      - configserver
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka:8080/eureka/
+    networks:
+      - fitness-net
+
+  # ----------------------
+  # Activity Service
+  # ----------------------
+  activityservice:
+    build: ./services/activityservice
+    container_name: activityservice
+    ports:
+      - "5567:8080"
+    depends_on:
+      - eureka
+      - configserver
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka:8080/eureka/
+    networks:
+      - fitness-net
+
+  # ----------------------
+  # AI Service
+  # ----------------------
+  aiservice:
+    build: ./services/aiservice
+    container_name: aiservice
+    ports:
+      - "5568:8080"
+    depends_on:
+      - eureka
+      - configserver
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka:8080/eureka/
+    networks:
+      - fitness-net
+
+  # -----------------------
+  # Frontend (React + Nginx)
+  # -----------------------
+  frontend:
+    build: ./fitness-frontend
+    container_name: fitness-frontend
+    ports:
+      - "5173:80"
+    networks:
+      - fitness-net
+
+  # -----------------------
+  # Kafka + Zookeeper
+  # -----------------------
+  zookeeper:
+    image: wurstmeister/zookeeper
+    ports:
+      - "2181:2181"
+    networks:
+      - fitness-net
+
+  kafka:
+    image: wurstmeister/kafka
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+    depends_on:
+      - zookeeper
+    networks:
+      - fitness-net
+
+  # -----------------------
+  # Keycloak + Postgres
+  # -----------------------
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: keycloak
+      POSTGRES_DB: keycloak
+    networks:
+      - fitness-net
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0
+    command:
+      - start-dev
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: keycloak
+    ports:
+      - "8181:8080"
+    depends_on:
+      - postgres
+    networks:
+      - fitness-net
+
+networks:
+  fitness-net:
+    driver: bridge
